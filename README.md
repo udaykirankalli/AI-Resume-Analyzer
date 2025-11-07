@@ -1,4 +1,4 @@
-# 📱 Resume Analyzer 
+# 📱AI Resume Analyzer 
 
 [![Deploy on Render](https://img.shields.io/badge/Deployed%20on-Render-blue?logo=render)](https://phonalynx.onrender.com/)
 [![Made with Flask](https://img.shields.io/badge/Made%20with-Flask-green?logo=flask)](https://flask.palletsprojects.com/)
@@ -15,7 +15,7 @@
 
 📌 About the Project
 ## 📌 About the Project
-**Phonalynx** is a full-stack web application built with **Flask (Python backend)** and **React (frontend)**, containerized with **Docker** and deployed on **Render**.  
+**AIResume Anlazer(Phonalynx)** is a full-stack web application built with **Flask (Python backend)** and **React (frontend)**, containerized with **Docker** and deployed on **Render**.  
 
 It demonstrates:
 - 🔐 Authentication (JWT-based + Google & GitHub login)  
@@ -121,9 +121,9 @@ Feel free to fork and submit PRs.
 📬 Contact
 👤 Uday Kiran
 
-GitHub: @UdayKiranKalli
+GitHub: @udaykiranakalli
 
-LinkedIn:https://www.linkedin.com/in/kalliudaykiran
+LinkedIn:https://www.linkedin.com/in/udaykirankalli
 
 Email: kalliudaykiran@gmail.com
 
