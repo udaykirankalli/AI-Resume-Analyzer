@@ -1,4 +1,4 @@
-# 📱 Phonalynx
+# 📱 Resume Analyzer 
 
 [![Deploy on Render](https://img.shields.io/badge/Deployed%20on-Render-blue?logo=render)](https://phonalynx.onrender.com/)
 [![Made with Flask](https://img.shields.io/badge/Made%20with-Flask-green?logo=flask)](https://flask.palletsprojects.com/)
