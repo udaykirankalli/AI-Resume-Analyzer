@@ -83,6 +83,14 @@ if os.getenv("FLASK_ENV") == "production":
         "https://phonalynx.onrender.com/auth/github/callback",
         "https://www.phonalynx.onrender.com/auth/github/callback"
     ]
+    env_frontend = os.getenv("FRONTEND_URL")
+    if env_frontend:
+        allowed_origins.extend([
+            env_frontend,
+            env_frontend.rstrip("/"),
+            f"{env_frontend.rstrip('/')}/auth/github/callback",
+            f"{env_frontend.rstrip('/')}/"
+        ])
 else:
     allowed_origins = [
         "http://localhost:5173", 
