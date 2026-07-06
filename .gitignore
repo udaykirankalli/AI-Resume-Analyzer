@@ -1,3 +1,10 @@
 .env
-.env
 profile_images/
+venv/
+backend/venv/
+__pycache__/
+backend/__pycache__/
+.pytest_cache/
+backend/.pytest_cache/
+frontend/dist/
+backend/test_app.py.log

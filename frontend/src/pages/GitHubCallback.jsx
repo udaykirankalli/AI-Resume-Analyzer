@@ -21,7 +21,7 @@ export default function GitHubCallback() {
     const handleCallback = async () => {
       try {
         const res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/github-login`,
+          `${import.meta.env.VITE_API_URL}/github-login`,
           { code },
           { headers: { "Content-Type": "application/json" }, withCredentials: true }
         );

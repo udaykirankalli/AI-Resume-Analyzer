@@ -45,7 +45,7 @@ const UserDetails = () => {
     return `${fullUrl}?t=${imageTimestamp}`;
   }, [imageTimestamp]);
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
@@ -70,15 +70,16 @@ const UserDetails = () => {
       const data = await res.json();
       console.log('Fetched user data:', data);
       
-      setUserData(data);
+      setUserData(prev => {
+        // Only update timestamp if image path actually changed
+        if (data.profile_image && data.profile_image !== prev.profile_image) {
+          setImageTimestamp(Date.now());
+        }
+        return data;
+      });
       setName(data.name || '');
       setEmail(data.email || '');
       setImageError(false); // Reset image error state
-      
-      // Only update timestamp if image path actually changed
-      if (data.profile_image && data.profile_image !== userData.profile_image) {
-        setImageTimestamp(Date.now());
-      }
       
     } catch (err) {
       console.error('Error fetching user data:', err);
@@ -89,9 +90,9 @@ const UserDetails = () => {
         navigate('/login');
       }
     }
-  };
+  }, [navigate]);
 
-  const fetchResumeHistory = async () => {
+  const fetchResumeHistory = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
     
@@ -118,12 +119,12 @@ const UserDetails = () => {
       toast.error('Failed to load resume history');
       setResumes([]);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchUserData();
     fetchResumeHistory();
-  }, []);
+  }, [fetchUserData, fetchResumeHistory]);
 
   const handleLogout = () => {
     // Clear all user-related data

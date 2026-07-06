@@ -333,6 +333,8 @@ def register():
 
     try:
         conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"}), 500
         cur = conn.cursor()
         cur.execute("SELECT 1 FROM users WHERE email=%s", (email,))
         if cur.fetchone():
@@ -360,6 +362,8 @@ def login():
 
     try:
         conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"}), 500
         cur = conn.cursor()
         cur.execute("SELECT password FROM users WHERE email=%s", (email,))
         user = cur.fetchone()
@@ -497,6 +501,8 @@ def github_login():
 
         # 3. Create or update user in DB
         conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"}), 500
         cur = conn.cursor()
         cur.execute("SELECT id FROM users WHERE email=%s", (email,))
         user = cur.fetchone()
@@ -513,11 +519,7 @@ def github_login():
         conn.close()
 
         # 4. Generate JWT
-        token = jwt.encode(
-            {"email": email, "exp": datetime.utcnow() + timedelta(hours=24)},
-            JWT_SECRET,
-            algorithm="HS256"
-        )
+        token = generate_token(email)
 
         return jsonify({"token": token, "email": email}), 200
 
@@ -530,6 +532,8 @@ def send_reset_link():
     email = data.get("email")
     try:
         conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"}), 500
         cur = conn.cursor()
         cur.execute("SELECT * FROM users WHERE email=%s", (email,))
         user = cur.fetchone()
@@ -588,6 +592,8 @@ def api_reset_password(token):
         
         try:
             conn = get_db_connection()
+            if not conn:
+                return jsonify({"error": "Database connection failed"}), 500
             cur = conn.cursor()
             cur.execute("UPDATE users SET password=%s WHERE email=%s", (hashed_pw, email))
             conn.commit()
@@ -620,11 +626,18 @@ def evaluate_resume():
 
         evaluation = generate_detailed_evaluation_via_gemini(resume_text, job_description)
 
-        match = re.search(r'ATS Score\s*\(.*?\):\s*(\d+)', evaluation)
+        # Robust ATS Score parser
+        match = re.search(r'ATS Score\s*(?:\(.*?\))?\s*:\s*(?:\[)?\s*(\d+)', evaluation, re.IGNORECASE)
+        if not match:
+            # Fallback: remove "(out of 100)" to avoid matching 100
+            cleaned_eval = re.sub(r'\(.*?100.*?\)', '', evaluation)
+            match = re.search(r'ATS Score[^\d]*(\d+)', cleaned_eval, re.IGNORECASE)
         score = int(match.group(1)) if match else 0
 
         if email:
             conn = get_db_connection()
+            if not conn:
+                return jsonify({"error": "Database connection failed"}), 500
             cur = conn.cursor()
             cur.execute("""
                 INSERT INTO resume_history (email, file_name, created_at)
@@ -668,6 +681,8 @@ def resume_history():
 
     try:
         conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"}), 500
         cur = conn.cursor()
         cur.execute("SELECT file_name, created_at FROM resume_history WHERE email = %s", (email,))
         rows = cur.fetchall()
@@ -703,6 +718,8 @@ def update_name():
 
     try:
         conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"}), 500
         cur = conn.cursor()
         cur.execute("UPDATE users SET name=%s WHERE email=%s", (new_name, email))
         conn.commit()
@@ -735,6 +752,8 @@ def change_password():
         hashed_pw = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
 
         conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"}), 500
         cur = conn.cursor()
         cur.execute("UPDATE users SET password=%s WHERE email=%s", (hashed_pw, email))
         conn.commit()
