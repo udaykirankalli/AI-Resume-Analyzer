@@ -160,7 +160,10 @@ try:
 
     elif FIREBASE_CRED_JSON:
         # Load JSON string from env → dict
-        cred_dict = json.loads(FIREBASE_CRED_JSON)
+        # Clean up invalid backslash escapes (e.g. \M in private key) to prevent json decode errors
+        import re
+        cleaned_json = re.sub(r'\\(?![\\"/bfnrtu])', r'\\\\', FIREBASE_CRED_JSON)
+        cred_dict = json.loads(cleaned_json)
 
         # 🔑 Fix private_key newlines (important!)
         if "private_key" in cred_dict:
