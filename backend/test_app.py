@@ -9,8 +9,9 @@ import os
 os.environ["DATABASE_URL"] = "postgresql://dummy:dummy@localhost:5432/dummy"
 os.environ["JWT_SECRET"] = "dummy-jwt-secret"
 os.environ["FLASK_ENV"] = "testing"
+os.environ["GROQ_API_KEY"] = "test-groq-key"
 
-from app import app, get_db_connection
+from app import app, get_db_connection, call_groq, format_evaluation_report, parse_json_response
 
 class PhonalynxBackendTestCase(unittest.TestCase):
     def setUp(self):
@@ -142,6 +143,36 @@ class PhonalynxBackendTestCase(unittest.TestCase):
             
             score = int(match.group(1)) if match else 0
             self.assertEqual(score, expected_score, f"Failed for output: {input_text}")
+
+    def test_parse_json_response_accepts_code_fences(self):
+        payload = parse_json_response('```json\n{"match_score": 78}\n```')
+        self.assertEqual(payload["match_score"], 78)
+
+    def test_formatted_evaluation_report_contains_structured_sections(self):
+        report = format_evaluation_report({
+            "match_score": 78,
+            "seniority_fit": "Partial",
+            "seniority_warning": "The candidate has relevant project work.",
+            "score_breakdown": {"skills": 80},
+            "matched_skills": ["Python"],
+            "ats_keywords": {"use_now": ["REST APIs"], "add_after_gaining_evidence": ["Redis"]},
+            "application_recommendation": {"decision": "Apply as a stretch role", "reason": "Senior experience is limited.", "next_action": "Strengthen one project."},
+        })
+        self.assertIn("Match Score: 78/100", report)
+        self.assertIn("Use now: REST APIs", report)
+        self.assertIn("ATS Score: 78/100", report)
+
+    @patch("app.requests.post")
+    def test_call_groq_returns_chat_completion_text(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.json.return_value = {"choices": [{"message": {"content": "Useful feedback"}}]}
+        mock_post.return_value = mock_response
+
+        result = call_groq("Test prompt")
+
+        self.assertEqual(result, "Useful feedback")
+        self.assertEqual(mock_post.call_args.kwargs["json"]["model"], "llama-3.3-70b-versatile")
 
 if __name__ == '__main__':
     unittest.main()

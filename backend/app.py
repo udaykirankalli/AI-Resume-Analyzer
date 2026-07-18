@@ -43,7 +43,8 @@ api_endpoints = [
     "register", "login", "google-login", "github-login",
     "evaluate", "user-details", "resume-history", "update-name",
     "upload-profile-image", "forgot-password-link", "reset-password",
-    "health", "change-password", "profile_images", "api"
+    "health", "change-password", "profile_images", "career-tools",
+    "resume-analyses", "compare-jobs", "reports", "api"
 ]
 
 @app.route("/", defaults={"path": ""})
@@ -234,7 +235,7 @@ class AIProviderError(Exception):
         self.status_code = status_code
 
 
-def call_groq(prompt):
+def call_groq(prompt, json_mode=False):
     """Send a prompt to Groq's OpenAI-compatible chat-completions API."""
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
@@ -252,6 +253,7 @@ def call_groq(prompt):
                 "model": model_name,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0.2,
+                **({"response_format": {"type": "json_object"}} if json_mode else {}),
             },
             timeout=60,
         )
@@ -295,6 +297,17 @@ Important:
     except Exception:
         return {"error": "Invalid JSON from Groq", "raw": raw}
 
+def parse_json_response(raw_response):
+    """Parse a JSON response while tolerating an accidental Markdown code fence."""
+    cleaned = raw_response.strip()
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", cleaned, flags=re.IGNORECASE)
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError as error:
+        raise AIProviderError("AI service returned invalid structured feedback.", 502) from error
+
+
 def generate_detailed_evaluation_via_groq(resume_text, job_description):
     prompt = f"""
 You are an expert ATS reviewer and resume editor. Compare the resume with the job description and provide precise, practical feedback.
@@ -308,41 +321,32 @@ CORE RULES:
 - Do not claim the candidate is senior if the resume does not demonstrate the required seniority.
 - Use concise bullets. Each bullet must explain what to change and why.
 
-RETURN EXACTLY THESE SECTIONS:
+Return only a valid JSON object with this exact structure:
+{
+  "match_score": 0,
+  "seniority_fit": "Strong | Partial | Weak",
+  "seniority_warning": "2-3 concise sentences",
+  "score_breakdown": {
+    "skills": 0,
+    "experience": 0,
+    "projects": 0,
+    "ats_keywords": 0,
+    "resume_clarity": 0
+  },
+  "matched_skills": ["at most 8 supported skills"],
+  "missing_skills": [{"skill": "", "status": "Learn | Add evidence if already used", "reason": ""}],
+  "resume_changes": [{"priority": 1, "resume_evidence": "", "change": "", "why_it_matters": ""}],
+  "bullet_rewrites": [{"section": "", "rewrite": "", "evidence_note": ""}],
+  "ats_keywords": {
+    "use_now": ["at most 8 supported keywords"],
+    "add_after_gaining_evidence": ["at most 6 truthful future keywords"]
+  },
+  "focused_skills": [{"category": "", "skills": ["at most 10 total supported skills"]}],
+  "improvement_plan": [{"week": "Week 1", "action": "", "resume_evidence_to_create": ""}],
+  "application_recommendation": {"decision": "Apply now | Apply as a stretch role | Target a more junior role first", "reason": "", "next_action": ""}
+}
 
-1. Match Score & Seniority Fit
-Match Score: X/100
-Seniority Fit: Strong / Partial / Weak
-Give 2-3 concise sentences explaining the score, the candidate's current level, and the largest gap for this role.
-
-2. Skills Match
-Matched Skills: List at most 8 job-relevant skills that are explicitly supported by the resume.
-Missing or Weak Skills: List at most 6 high-impact requirements missing from, or weakly evidenced in, the resume. Mark each as either "Learn" or "Add evidence if already used".
-
-3. What to Change in the Resume
-Give 3-5 prioritized edits. For each edit, use this exact pattern:
-- Resume evidence: <what the resume currently says or lacks>
-  Change: <specific edit to make>
-  Why it matters: <connection to this job>
-
-4. Tailored Bullet Rewrites
-Provide up to 3 rewritten resume bullets for existing experience or projects. Only rewrite facts already present in the resume. Improve action verbs, technical specificity, and relevance. If the resume has insufficient evidence for a rewrite, say exactly what evidence the candidate should add instead. Never invent numbers or outcomes.
-
-5. ATS Keywords to Add Truthfully
-Give two short lists:
-- Use now: at most 8 exact keywords already supported by the resume that should be placed in the summary, skills, experience, or projects.
-- Add after gaining evidence: at most 6 keywords from the job description that must not be added until the candidate has actually learned or used them.
-
-6. Focused Skills Section
-Recommend a final skills section containing at most 10 skills, grouped into 2-3 useful categories. Include only skills supported by the resume and most relevant to this job. Do not list soft skills, duplicate technologies, or unrelated tools.
-
-7. 30-Day Improvement Plan
-Give a four-week plan. Each week must have one concrete learning or project action that produces evidence the candidate can add to the resume. Focus on the most important missing requirements, not certifications or generic courses.
-
-8. Application Recommendation
-State whether to apply now, apply as a stretch role, or target a more junior role first. Give one concise reason and one next action.
-
-End with exactly: ATS Score: X/100
+Every score must be an integer from 0 to 100. Include 3-5 resume_changes, up to 3 bullet_rewrites, and exactly 4 improvement_plan items.
 
 Resume:
 \"\"\"{resume_text}\"\"\"
@@ -352,7 +356,66 @@ Job Description:
 
 IMPORTANT: Follow the exact format above. No markdown formatting, no extra spaces, no code blocks."
 """
-    return call_groq(prompt)
+    return parse_json_response(call_groq(prompt, json_mode=True))
+
+
+def format_evaluation_report(analysis):
+    """Keep the existing UI working while exposing structured data for the next UI version."""
+    breakdown = analysis.get("score_breakdown", {})
+    keyword_data = analysis.get("ats_keywords", {})
+    sections = [
+        "1. Match Score & Seniority Fit",
+        f"Match Score: {analysis.get('match_score', 0)}/100",
+        f"Seniority Fit: {analysis.get('seniority_fit', 'Not assessed')}",
+        analysis.get("seniority_warning", ""),
+        "\n2. Score Breakdown",
+        "\n".join(f"- {name.replace('_', ' ').title()}: {score}/100" for name, score in breakdown.items()),
+        "\n3. Skills Match",
+        f"Matched Skills: {', '.join(analysis.get('matched_skills', [])) or 'None identified'}",
+        "Missing or Weak Skills:",
+        "\n".join(f"- {item.get('skill')}: {item.get('status')} — {item.get('reason')}" for item in analysis.get("missing_skills", [])),
+        "\n4. What to Change in the Resume",
+        "\n".join(
+            f"- Resume evidence: {item.get('resume_evidence')}\n  Change: {item.get('change')}\n  Why it matters: {item.get('why_it_matters')}"
+            for item in analysis.get("resume_changes", [])
+        ),
+        "\n5. Tailored Bullet Rewrites",
+        "\n".join(f"- {item.get('section')}: {item.get('rewrite')}" for item in analysis.get("bullet_rewrites", [])),
+        "\n6. ATS Keywords to Add Truthfully",
+        f"Use now: {', '.join(keyword_data.get('use_now', [])) or 'None identified'}",
+        f"Add after gaining evidence: {', '.join(keyword_data.get('add_after_gaining_evidence', [])) or 'None identified'}",
+        "\n7. Focused Skills Section",
+        "\n".join(f"- {item.get('category')}: {', '.join(item.get('skills', []))}" for item in analysis.get("focused_skills", [])),
+        "\n8. 30-Day Improvement Plan",
+        "\n".join(f"- {item.get('week')}: {item.get('action')} Evidence: {item.get('resume_evidence_to_create')}" for item in analysis.get("improvement_plan", [])),
+        "\n9. Application Recommendation",
+        f"{analysis.get('application_recommendation', {}).get('decision', '')}: {analysis.get('application_recommendation', {}).get('reason', '')}",
+        f"Next action: {analysis.get('application_recommendation', {}).get('next_action', '')}",
+        f"\nATS Score: {analysis.get('match_score', 0)}/100",
+    ]
+    return "\n".join(part for part in sections if part)
+
+
+def ensure_resume_analyses_table(cursor):
+    """Create the separate analysis store without altering existing user tables."""
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS resume_analyses (
+            id SERIAL PRIMARY KEY,
+            email VARCHAR(255) NOT NULL,
+            file_name VARCHAR(255) NOT NULL,
+            job_description TEXT NOT NULL,
+            match_score INTEGER NOT NULL,
+            analysis JSONB NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+
+def get_authenticated_email():
+    token = request.headers.get("Authorization")
+    if not token:
+        return None
+    return decode_token(token)
 
 def match_with_job(skills, job_desc):
     if not skills:
@@ -677,25 +740,25 @@ def evaluate_resume():
 
         parsed_json = extract_resume_via_groq(resume_text)
 
-        evaluation = generate_detailed_evaluation_via_groq(resume_text, job_description)
-
-        # Robust ATS Score parser
-        match = re.search(r'ATS Score\s*(?:\(.*?\))?\s*:\s*(?:\[)?\s*(\d+)', evaluation, re.IGNORECASE)
-        if not match:
-            # Fallback: remove "(out of 100)" to avoid matching 100
-            cleaned_eval = re.sub(r'\(.*?100.*?\)', '', evaluation)
-            match = re.search(r'ATS Score[^\d]*(\d+)', cleaned_eval, re.IGNORECASE)
-        score = int(match.group(1)) if match else 0
+        analysis = generate_detailed_evaluation_via_groq(resume_text, job_description)
+        evaluation = format_evaluation_report(analysis)
+        score = max(0, min(100, int(analysis.get("match_score", 0))))
 
         if email:
             conn = get_db_connection()
             if not conn:
                 return jsonify({"error": "Database connection failed"}), 500
             cur = conn.cursor()
+            ensure_resume_analyses_table(cur)
             cur.execute("""
                 INSERT INTO resume_history (email, file_name, created_at)
                 VALUES (%s, %s, %s)
             """, (email, resume_file.filename, datetime.utcnow()))
+
+            cur.execute("""
+                INSERT INTO resume_analyses (email, file_name, job_description, match_score, analysis)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (email, resume_file.filename, job_description, score, json.dumps(analysis)))
 
             cur.execute("SELECT resumes_analyzed, average_score FROM users WHERE email = %s", (email,))
             user_data = cur.fetchone()
@@ -715,7 +778,11 @@ def evaluate_resume():
             cur.close()
             conn.close()
 
-        return jsonify({"evaluation": evaluation, "parsed_resume": parsed_json})
+        return jsonify({
+            "evaluation": evaluation,
+            "analysis": analysis,
+            "parsed_resume": parsed_json,
+        })
 
     except AIProviderError as e:
         return jsonify({"error": str(e)}), e.status_code
@@ -754,6 +821,164 @@ def resume_history():
         return jsonify(resume_list)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/resume-analyses", methods=["GET"])
+def list_resume_analyses():
+    """Return saved structured analyses for the signed-in user's dashboard."""
+    email = get_authenticated_email()
+    if not email:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"}), 500
+        cur = conn.cursor()
+        ensure_resume_analyses_table(cur)
+        cur.execute("""
+            SELECT id, file_name, match_score, created_at
+            FROM resume_analyses WHERE email = %s
+            ORDER BY created_at DESC
+        """, (email,))
+        rows = cur.fetchall()
+        conn.commit()
+        cur.close()
+        conn.close()
+        return jsonify([
+            {
+                "id": row[0],
+                "filename": row[1],
+                "match_score": row[2],
+                "created_at": row[3].isoformat(),
+            }
+            for row in rows
+        ])
+    except Exception as error:
+        return jsonify({"error": str(error)}), 500
+
+
+@app.route("/resume-analyses/<int:analysis_id>", methods=["GET"])
+def get_resume_analysis(analysis_id):
+    """Return one saved analysis only when it belongs to the signed-in user."""
+    email = get_authenticated_email()
+    if not email:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"}), 500
+        cur = conn.cursor()
+        ensure_resume_analyses_table(cur)
+        cur.execute("""
+            SELECT id, file_name, job_description, match_score, analysis, created_at
+            FROM resume_analyses WHERE id = %s AND email = %s
+        """, (analysis_id, email))
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        if not row:
+            return jsonify({"error": "Analysis not found"}), 404
+        return jsonify({
+            "id": row[0],
+            "filename": row[1],
+            "job_description": row[2],
+            "match_score": row[3],
+            "analysis": row[4],
+            "created_at": row[5].isoformat(),
+        })
+    except Exception as error:
+        return jsonify({"error": str(error)}), 500
+
+
+def get_resume_and_job_from_request():
+    if "resume" not in request.files or "job_description" not in request.form:
+        raise ValueError("Resume file and job description are required")
+    resume_text = extract_text_from_file(request.files["resume"])
+    job_description = request.form["job_description"].strip()
+    if not resume_text or not job_description:
+        raise ValueError("Resume text and job description cannot be empty")
+    return resume_text, job_description
+
+
+@app.route("/career-tools/<tool_name>", methods=["POST"])
+def career_tools(tool_name):
+    """Generate UI-ready cover letters or interview questions from a resume and job."""
+    prompts = {
+        "cover-letter": """Write a concise, truthful cover letter under 300 words. Use only facts in the resume. Address the role directly, mention 2-3 supported qualifications, acknowledge no unsupported skills, and end with a professional call to action. Return plain text only.""",
+        "interview-questions": """Return valid JSON: {\"technical\":[{\"question\":\"\",\"why_asked\":\"\",\"preparation_tip\":\"\"}],\"behavioral\":[{\"question\":\"\",\"why_asked\":\"\",\"preparation_tip\":\"\"}]}. Give 5 technical and 3 behavioral questions tailored to the resume and job. Do not imply experience the resume does not support.""",
+    }
+    instruction = prompts.get(tool_name)
+    if not instruction:
+        return jsonify({"error": "Unsupported tool. Use cover-letter or interview-questions."}), 404
+
+    try:
+        resume_text, job_description = get_resume_and_job_from_request()
+        prompt = f"""{instruction}
+
+Resume:
+\"\"\"{resume_text}\"\"\"
+
+Job description:
+\"\"\"{job_description}\"\"\""""
+        result = call_groq(prompt, json_mode=tool_name == "interview-questions")
+        return jsonify({"tool": tool_name, "result": parse_json_response(result) if tool_name == "interview-questions" else result})
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+    except AIProviderError as error:
+        return jsonify({"error": str(error)}), error.status_code
+
+
+@app.route("/compare-jobs", methods=["POST"])
+def compare_jobs():
+    """Rank up to five job descriptions against one uploaded resume."""
+    if "resume" not in request.files or "job_descriptions" not in request.form:
+        return jsonify({"error": "Resume file and job_descriptions are required"}), 400
+    try:
+        jobs = json.loads(request.form["job_descriptions"])
+        if not isinstance(jobs, list) or not 2 <= len(jobs) <= 5 or not all(isinstance(job, str) and job.strip() for job in jobs):
+            raise ValueError
+    except ValueError:
+        return jsonify({"error": "job_descriptions must be a JSON array containing 2 to 5 non-empty descriptions"}), 400
+
+    try:
+        resume_text = extract_text_from_file(request.files["resume"])
+        prompt = f"""Compare this resume against the job descriptions. Return valid JSON only:
+{{\"comparisons\":[{{\"job_index\":1,\"match_score\":0,\"seniority_fit\":\"Strong | Partial | Weak\",\"best_matches\":[\"\"],\"largest_gap\":\"\"}}],\"recommended_job_index\":1,\"recommendation_reason\":\"\"}}
+Use evidence only from the resume. Rank every job, use a 0-100 integer score, and recommend the best-fit role.
+
+Resume:
+\"\"\"{resume_text}\"\"\"
+
+Job descriptions:
+{json.dumps(jobs)}"""
+        return jsonify(parse_json_response(call_groq(prompt, json_mode=True)))
+    except AIProviderError as error:
+        return jsonify({"error": str(error)}), error.status_code
+
+
+@app.route("/reports/pdf", methods=["POST"])
+def download_pdf_report():
+    """Create a simple downloadable PDF from an evaluation report; no stored resume is required."""
+    data = request.get_json(silent=True) or {}
+    report_text = data.get("evaluation")
+    if not report_text and isinstance(data.get("analysis"), dict):
+        report_text = format_evaluation_report(data["analysis"])
+    if not isinstance(report_text, str) or not report_text.strip():
+        return jsonify({"error": "Provide evaluation text or an analysis object"}), 400
+
+    document = fitz.open()
+    lines = []
+    for line in report_text.splitlines():
+        lines.extend([line[index:index + 95] for index in range(0, max(len(line), 1), 95)] or [""])
+    for start in range(0, len(lines), 46):
+        page = document.new_page()
+        page.insert_textbox(fitz.Rect(45, 45, 550, 790), "\n".join(lines[start:start + 46]), fontsize=10, fontname="helv")
+    pdf_bytes = document.tobytes()
+    document.close()
+    return Response(pdf_bytes, mimetype="application/pdf", headers={"Content-Disposition": "attachment; filename=resume-analysis.pdf"})
 
 @app.route("/update-name", methods=["POST"])
 def update_name():
