@@ -297,50 +297,52 @@ Important:
 
 def generate_detailed_evaluation_via_groq(resume_text, job_description):
     prompt = f"""
-You are an expert HR professional. Provide a resume evaluation with STRICT formatting requirements.
+You are an expert ATS reviewer and resume editor. Compare the resume with the job description and provide precise, practical feedback.
 
-FORMATTING RULES:
-- Use EXACTLY this structure with numbered sections
-- Start each main section with number and period
-- NO extra blank lines between sections
-- NO indentation or extra spaces
-- Keep text concise and professional
-- End with ATS Score as "ATS Score: X/100"
+CORE RULES:
+- Use only evidence present in the resume. Never invent experience, projects, metrics, certifications, tools, employers, or responsibilities.
+- Do not use generic filler, placeholder phrases, or boilerplate such as "First key strength" or "needs more experience."
+- Keep the analysis direct, constructive, and specific to this job description.
+- Do not recommend a keyword unless the candidate can truthfully support it through their experience, project work, coursework, or learning plan.
+- Do not produce a long skill dump. Prioritize the highest-value skills for this role.
+- Do not claim the candidate is senior if the resume does not demonstrate the required seniority.
+- Use concise bullets. Each bullet must explain what to change and why.
 
-REQUIRED STRUCTURE:
+RETURN EXACTLY THESE SECTIONS:
 
-1. Overall Assessment
-Brief professional summary of candidate's profile and overall suitability.
+1. Match Score & Seniority Fit
+Match Score: X/100
+Seniority Fit: Strong / Partial / Weak
+Give 2-3 concise sentences explaining the score, the candidate's current level, and the largest gap for this role.
 
-2. Strengths
-First key strength with specific example
-Second strength with relevant details
-Third strength highlighting relevant experience
+2. Skills Match
+Matched Skills: List at most 8 job-relevant skills that are explicitly supported by the resume.
+Missing or Weak Skills: List at most 6 high-impact requirements missing from, or weakly evidenced in, the resume. Mark each as either "Learn" or "Add evidence if already used".
 
-3. Weaknesses
-Primary weakness with improvement suggestion
-Secondary area needing development
-Missing skills or experience gaps
+3. What to Change in the Resume
+Give 3-5 prioritized edits. For each edit, use this exact pattern:
+- Resume evidence: <what the resume currently says or lacks>
+  Change: <specific edit to make>
+  Why it matters: <connection to this job>
 
-4. Alignment with Job Description
-How well resume matches job requirements
-Relevant experience alignment
-Skills compatibility assessment
+4. Tailored Bullet Rewrites
+Provide up to 3 rewritten resume bullets for existing experience or projects. Only rewrite facts already present in the resume. Improve action verbs, technical specificity, and relevance. If the resume has insufficient evidence for a rewrite, say exactly what evidence the candidate should add instead. Never invent numbers or outcomes.
 
-5. Skills to Improve & Suggested Courses
-Technical skill gaps with course recommendations
-Professional development areas
-Industry-specific certifications needed
+5. ATS Keywords to Add Truthfully
+Give two short lists:
+- Use now: at most 8 exact keywords already supported by the resume that should be placed in the summary, skills, experience, or projects.
+- Add after gaining evidence: at most 6 keywords from the job description that must not be added until the candidate has actually learned or used them.
 
-6. Specific Resume Improvements
-Content and structure suggestions
-Keyword optimization recommendations
-Format and presentation enhancements
+6. Focused Skills Section
+Recommend a final skills section containing at most 10 skills, grouped into 2-3 useful categories. Include only skills supported by the resume and most relevant to this job. Do not list soft skills, duplicate technologies, or unrelated tools.
 
-7. Conclusion
-Final recommendation and overall assessment summary.
+7. 30-Day Improvement Plan
+Give a four-week plan. Each week must have one concrete learning or project action that produces evidence the candidate can add to the resume. Focus on the most important missing requirements, not certifications or generic courses.
 
-8. ATS Score: [X/100]
+8. Application Recommendation
+State whether to apply now, apply as a stretch role, or target a more junior role first. Give one concise reason and one next action.
+
+End with exactly: ATS Score: X/100
 
 Resume:
 \"\"\"{resume_text}\"\"\"
