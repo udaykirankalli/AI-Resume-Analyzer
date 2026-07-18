@@ -160,7 +160,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Shared black/cyan glass theme for every routed page. The older pages use
+/* Shared black/gray glass theme for every routed page. The older pages use
    utility classes directly, so these selectors preserve their layouts while
    bringing their surfaces into the landing page's visual system. */
 body {
@@ -210,37 +210,39 @@ body {
 [class~="bg-blue-600"],
 [class*="from-blue-600"],
 [class*="from-blue-500"] {
-  background-image: linear-gradient(135deg, #22d3ee, #38bdf8) !important;
-  background-color: #0891b2 !important;
+  background-image: linear-gradient(135deg, #e2e8f0, #94a3b8) !important;
+  background-color: #cbd5e1 !important;
 }
 
 [class*="hover:bg-blue-700"]:hover,
 [class*="hover:from-blue-700"]:hover {
-  background-color: #22d3ee !important;
+  background-color: #e2e8f0 !important;
   background-image: none !important;
 }
 
 [class*="text-blue-600"],
 [class*="text-blue-700"] {
-  color: #67e8f9 !important;
+  color: #e2e8f0 !important;
 }
 
 [class*="from-purple"], [class*="via-purple"], [class*="to-purple"],
-[class*="from-violet"], [class*="via-violet"], [class*="to-violet"] {
-  background-image: linear-gradient(135deg, #22d3ee, #38bdf8) !important;
+[class*="from-violet"], [class*="via-violet"], [class*="to-violet"],
+[class*="from-cyan"], [class*="via-cyan"], [class*="to-cyan"] {
+  background-image: linear-gradient(135deg, #e2e8f0, #94a3b8) !important;
 }
 
-[class*="bg-purple"], [class*="bg-violet"] {
-  background-color: rgba(34, 211, 238, 0.13) !important;
+[class*="bg-purple"], [class*="bg-violet"], [class*="bg-cyan"] {
+  background-color: rgba(203, 213, 225, 0.12) !important;
 }
 
-[class*="border-purple"], [class*="border-violet"] {
-  border-color: rgba(103, 232, 249, 0.24) !important;
+[class*="border-purple"], [class*="border-violet"], [class*="border-cyan"] {
+  border-color: rgba(226, 232, 240, 0.24) !important;
 }
 
 [class*="text-purple"], [class*="text-violet"],
-[class*="hover:text-violet"]:hover {
-  color: #67e8f9 !important;
+[class*="text-cyan"], [class*="hover:text-violet"]:hover,
+[class*="hover:text-cyan"]:hover {
+  color: #e2e8f0 !important;
 }
 
 input, textarea, select {

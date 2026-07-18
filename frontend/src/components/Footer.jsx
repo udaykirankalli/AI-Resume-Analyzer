@@ -9,7 +9,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center space-x-2 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-300 to-sky-400">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-slate-200 to-slate-400">
                 <span className="text-white font-bold text-sm">PL</span>
               </div>
               <h3 className="text-lg font-semibold">Phonalynx AI</h3>
@@ -59,13 +59,13 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Connect</h4>
             <div className="flex space-x-4">
-              <a href="https://www.linkedin.com/in/kalliudaykiran/" className="text-slate-400 transition-colors hover:text-cyan-200">
+              <a href="https://www.linkedin.com/in/kalliudaykiran/" className="text-slate-400 transition-colors hover:text-slate-200">
                 <Linkedin className="h-5 w-5" />
               </a>
-              <a href="https://github.com/UdaykiranKalli" className="text-slate-400 transition-colors hover:text-cyan-200">
+              <a href="https://github.com/UdaykiranKalli" className="text-slate-400 transition-colors hover:text-slate-200">
                 <Github className="h-5 w-5" />
               </a>
-               <a href="https://www.instagram.com/phonalynx/" className="text-slate-400 transition-colors hover:text-cyan-200">
+               <a href="https://www.instagram.com/phonalynx/" className="text-slate-400 transition-colors hover:text-slate-200">
                 <Instagram className="h-5 w-5" />
               </a>
             </div>
