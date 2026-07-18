@@ -27,7 +27,7 @@ void main(){ vec3 p=(rotateX(radians(90.))*vec4(position,1.)).xyz; float wave=si
 
 const fragmentShader = `
 precision highp float; varying vec3 vPosition;
-void main(){ float opacity=(96.-length(vPosition))/256.*.58; vec3 color=mix(vec3(.17,.22,.42),vec3(.54,.34,.78),clamp(vPosition.y/85.,0.,1.)); gl_FragColor=vec4(color,opacity); }
+void main(){ float opacity=(96.-length(vPosition))/256.*.58; vec3 color=mix(vec3(.08,.18,.29),vec3(.12,.74,.82),clamp(vPosition.y/85.,0.,1.)); gl_FragColor=vec4(color,opacity); }
 `;
 
 export function GLSLHills({ className = "", cameraZ = 125, planeSize = 256, speed = 0.18 }) {
