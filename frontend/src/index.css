@@ -159,3 +159,74 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Shared indigo/violet glass theme for every routed page. The older pages use
+   utility classes directly, so these selectors preserve their layouts while
+   bringing their surfaces into the landing page's visual system. */
+body {
+  background: #080b1f;
+  color: #f8fafc;
+}
+
+[class*="bg-gradient-to-br"][class*="from-blue-100"],
+[class*="bg-gradient-to-br"][class*="from-blue-50"],
+[class*="bg-gradient-to-br"][class*="from-indigo-50"],
+[class*="bg-gradient-to-br"][class*="from-slate-50"] {
+  background-image: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.22), transparent 35%), linear-gradient(180deg, #111735 0%, #080b1f 78%) !important;
+}
+
+[class*="bg-white/"],
+[class*="bg-gray-50"],
+[class*="bg-gray-100"] {
+  background-color: rgba(20, 27, 57, 0.72) !important;
+}
+
+[class*="border-gray-"],
+[class*="border-white/"] {
+  border-color: rgba(226, 232, 240, 0.16) !important;
+}
+
+[class*="text-gray-900"],
+[class*="text-gray-800"],
+[class*="text-slate-800"],
+[class*="text-slate-700"] {
+  color: #f8fafc !important;
+}
+
+[class*="text-gray-700"],
+[class*="text-gray-600"],
+[class*="text-slate-600"],
+[class*="text-slate-500"],
+[class*="text-gray-500"],
+[class*="text-gray-400"] {
+  color: #cbd5e1 !important;
+}
+
+[class*="placeholder:text-slate-500"]::placeholder,
+[class*="placeholder:text-gray-500"]::placeholder {
+  color: #94a3b8 !important;
+}
+
+[class~="bg-blue-600"],
+[class*="from-blue-600"],
+[class*="from-blue-500"] {
+  background-image: linear-gradient(135deg, #8b5cf6, #c084fc) !important;
+  background-color: #8b5cf6 !important;
+}
+
+[class*="hover:bg-blue-700"]:hover,
+[class*="hover:from-blue-700"]:hover {
+  background-color: #a78bfa !important;
+  background-image: none !important;
+}
+
+[class*="text-blue-600"],
+[class*="text-blue-700"] {
+  color: #c4b5fd !important;
+}
+
+input, textarea, select {
+  color: #f8fafc;
+  background-color: rgba(15, 23, 42, 0.58);
+  border-color: rgba(226, 232, 240, 0.18);
+}
