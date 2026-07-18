@@ -1,55 +1,27 @@
-
-import { Button } from "./ui/button";
 import { FileText } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Button } from "./ui/button";
+
+const navigation = [
+  ["How it works", "/how-it-works"],
+  ["Features", "/features-page"],
+  ["About", "/about"],
+];
 
 export function Header() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/20 border-b border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.1)]">
-      <div className="container mx-auto px-6">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
-              <FileText className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Phonalynx AI
-            </span>
-          </div>
-
-{/* Navigation */}
-<nav className="hidden md:flex items-center space-x-8">
-  <Link to="/how-it-works" className="text-gray-800 hover:text-blue-600 font-medium transition-colors duration-200">
-    How it Works
-  </Link>
-  <Link to="/features-page" className="text-gray-800 hover:text-blue-600 font-medium transition-colors duration-200">
-    Features
-  </Link>
-  <Link to="/about" className="text-gray-800 hover:text-blue-600 font-medium transition-colors duration-200">
-    About
-  </Link>
-</nav>
-
-
-          {/* CTA Buttons */}
-          <div className="flex items-center space-x-4">
-            {/* ✅ Use asChild for proper routing without refreshing */}
-            <Link to="/analyze">
-              <Button
-                variant="outline"
-                className="backdrop-blur-md bg-white/30 border border-white/50 hover:bg-white/50 transition-all duration-300 shadow-[0_8px_25px_rgba(0,0,0,0.08)] text-gray-800"
-              >
-                Analyze
-              </Button>
-            </Link>
-
-            <Link to="/register">
-              <Button className="backdrop-blur-md bg-gradient-to-r from-blue-500/90 to-purple-600/90 border border-white/30 hover:from-blue-600/90 hover:to-purple-700/90 transition-all duration-300 shadow-[0_8px_25px_rgba(59,130,246,0.25)] text-white">
-                Register
-              </Button>
-            </Link>
-          </div>
+    <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between rounded-2xl border border-white/15 bg-[#11152d]/70 px-4 shadow-[0_16px_50px_rgba(4,7,24,0.35)] backdrop-blur-2xl sm:px-5">
+        <Link to="/" className="flex items-center gap-2.5 text-white">
+          <span className="grid h-9 w-9 place-items-center rounded-xl border border-white/15 bg-gradient-to-br from-sky-300 to-violet-400 text-slate-950"><FileText className="h-5 w-5" /></span>
+          <span className="font-semibold tracking-tight">Phonalynx AI</span>
+        </Link>
+        <nav className="hidden items-center gap-6 text-sm text-slate-300 md:flex">
+          {navigation.map(([label, href]) => <Link key={href} to={href} className="transition-colors hover:text-white">{label}</Link>)}
+        </nav>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" className="hidden text-slate-200 hover:bg-white/10 hover:text-white sm:inline-flex"><Link to="/analyze">Analyze</Link></Button>
+          <Button asChild className="rounded-xl bg-violet-300 px-4 text-slate-950 hover:bg-violet-200"><Link to="/register">Get started</Link></Button>
         </div>
       </div>
     </header>
