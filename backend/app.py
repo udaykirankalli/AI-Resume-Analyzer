@@ -230,7 +230,8 @@ def extract_phone(text):
 
 def call_gemini_for_json(prompt):
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        model_name = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+        model = genai.GenerativeModel(model_name)
         response = model.generate_content(prompt)
         return response.text if response and hasattr(response, "text") else ""
     except Exception as e:
