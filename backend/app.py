@@ -10,7 +10,6 @@ from datetime import datetime, timedelta, timezone
 from flask import Flask, request, jsonify, send_from_directory , Response , abort
 from flask_cors import CORS , cross_origin
 from flask_mail import Mail, Message
-import google.generativeai as genai
 import secrets
 import tempfile
 from dotenv import load_dotenv
@@ -27,11 +26,9 @@ print("debug token:", secrets.token_hex(16))
 
 load_dotenv()
 
-GEN_API_KEY = os.getenv("GEMINI_API_KEY")
-if not GEN_API_KEY:
-    print("WARNING: GEMINI_API_KEY not found in environment. Set GEMINI_API_KEY in .env")
-else:
-    genai.configure(api_key=GEN_API_KEY)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    print("WARNING: GROQ_API_KEY not found in environment. Set GROQ_API_KEY in .env")
 
 GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
 GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
@@ -229,17 +226,57 @@ def extract_phone(text):
     match = re.search(r"\b(?:\+91[\-\s]?)?[6-9]\d{9}\b", text)
     return match.group(0) if match else "Not found"
 
-def call_gemini_for_json(prompt):
-    try:
-        model_name = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
-        model = genai.GenerativeModel(model_name)
-        response = model.generate_content(prompt)
-        return response.text if response and hasattr(response, "text") else ""
-    except Exception as e:
-        print("Gemini API error:", str(e))
-        return f"ERROR: {str(e)}"
+class AIProviderError(Exception):
+    """An error returned by the configured AI provider."""
 
-def extract_resume_via_gemini(resume_text):
+    def __init__(self, message, status_code=502):
+        super().__init__(message)
+        self.status_code = status_code
+
+
+def call_groq(prompt):
+    """Send a prompt to Groq's OpenAI-compatible chat-completions API."""
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise AIProviderError("AI service is not configured. Set GROQ_API_KEY.", 503)
+
+    model_name = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    try:
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": model_name,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.2,
+            },
+            timeout=60,
+        )
+    except requests.RequestException as error:
+        print("Groq connection error:", str(error))
+        raise AIProviderError("Unable to reach the AI service. Please try again.", 503) from error
+
+    try:
+        payload = response.json()
+    except ValueError:
+        payload = {}
+
+    if not response.ok:
+        message = payload.get("error", {}).get("message", "Groq request failed.")
+        print(f"Groq API error ({response.status_code}): {message}")
+        raise AIProviderError(message, response.status_code)
+
+    try:
+        return payload["choices"][0]["message"]["content"].strip()
+    except (KeyError, IndexError, AttributeError) as error:
+        print("Groq API returned an unexpected response:", payload)
+        raise AIProviderError("AI service returned an invalid response.", 502) from error
+
+
+def extract_resume_via_groq(resume_text):
     prompt = f"""
 You are a resume parser. Extract the following details and return ONLY valid JSON with these keys:
 Full Name, Email, Phone, Skills, Education, Projects, Certifications, Work Experience, Objective, Interests, Links
@@ -252,13 +289,13 @@ Important:
 - Use keys exactly as listed above.
 - For lists, return arrays.
 """
-    raw = call_gemini_for_json(prompt)
+    raw = call_groq(prompt)
     try:
         return json.loads(raw)
     except Exception:
-        return {"error": "Invalid JSON from Gemini", "raw": raw}
+        return {"error": "Invalid JSON from Groq", "raw": raw}
 
-def generate_detailed_evaluation_via_gemini(resume_text, job_description):
+def generate_detailed_evaluation_via_groq(resume_text, job_description):
     prompt = f"""
 You are an expert HR professional. Provide a resume evaluation with STRICT formatting requirements.
 
@@ -313,7 +350,7 @@ Job Description:
 
 IMPORTANT: Follow the exact format above. No markdown formatting, no extra spaces, no code blocks."
 """
-    return call_gemini_for_json(prompt)
+    return call_groq(prompt)
 
 def match_with_job(skills, job_desc):
     if not skills:
@@ -636,9 +673,9 @@ def evaluate_resume():
     try:
         resume_text = extract_text_from_file(resume_file)
 
-        parsed_json = extract_resume_via_gemini(resume_text)
+        parsed_json = extract_resume_via_groq(resume_text)
 
-        evaluation = generate_detailed_evaluation_via_gemini(resume_text, job_description)
+        evaluation = generate_detailed_evaluation_via_groq(resume_text, job_description)
 
         # Robust ATS Score parser
         match = re.search(r'ATS Score\s*(?:\(.*?\))?\s*:\s*(?:\[)?\s*(\d+)', evaluation, re.IGNORECASE)
@@ -678,6 +715,8 @@ def evaluate_resume():
 
         return jsonify({"evaluation": evaluation, "parsed_resume": parsed_json})
 
+    except AIProviderError as e:
+        return jsonify({"error": str(e)}), e.status_code
     except Exception as e:
         import traceback
         traceback.print_exc()
