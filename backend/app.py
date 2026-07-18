@@ -107,7 +107,7 @@ CORS(app,
      expose_headers=["Content-Type", "Authorization"],
      max_age=86400)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("DATABASE_URI")
 JWT_SECRET = os.getenv("JWT_SECRET", "your-default-jwt-secret")
 
 app.config.update(
@@ -124,7 +124,8 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 def get_db_connection():
     try:
-        conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+        db_url = os.getenv("DATABASE_URL") or os.getenv("DATABASE_URI")
+        conn = psycopg2.connect(db_url)
         return conn
     except psycopg2.OperationalError as e:
         print("❌ Database connection error:", str(e))
