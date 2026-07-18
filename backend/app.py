@@ -321,30 +321,19 @@ CORE RULES:
 - Do not claim the candidate is senior if the resume does not demonstrate the required seniority.
 - Use concise bullets. Each bullet must explain what to change and why.
 
-Return only a valid JSON object with this exact structure:
-{
-  "match_score": 0,
-  "seniority_fit": "Strong | Partial | Weak",
-  "seniority_warning": "2-3 concise sentences",
-  "score_breakdown": {
-    "skills": 0,
-    "experience": 0,
-    "projects": 0,
-    "ats_keywords": 0,
-    "resume_clarity": 0
-  },
-  "matched_skills": ["at most 8 supported skills"],
-  "missing_skills": [{"skill": "", "status": "Learn | Add evidence if already used", "reason": ""}],
-  "resume_changes": [{"priority": 1, "resume_evidence": "", "change": "", "why_it_matters": ""}],
-  "bullet_rewrites": [{"section": "", "rewrite": "", "evidence_note": ""}],
-  "ats_keywords": {
-    "use_now": ["at most 8 supported keywords"],
-    "add_after_gaining_evidence": ["at most 6 truthful future keywords"]
-  },
-  "focused_skills": [{"category": "", "skills": ["at most 10 total supported skills"]}],
-  "improvement_plan": [{"week": "Week 1", "action": "", "resume_evidence_to_create": ""}],
-  "application_recommendation": {"decision": "Apply now | Apply as a stretch role | Target a more junior role first", "reason": "", "next_action": ""}
-}
+Return only a valid JSON object with these fields:
+- match_score: integer from 0 to 100
+- seniority_fit: Strong, Partial, or Weak
+- seniority_warning: 2-3 concise sentences
+- score_breakdown: object containing integer skills, experience, projects, ats_keywords, and resume_clarity scores
+- matched_skills: array of at most 8 supported skills
+- missing_skills: array of objects with skill, status (Learn or Add evidence if already used), and reason
+- resume_changes: array of objects with priority, resume_evidence, change, and why_it_matters
+- bullet_rewrites: array of objects with section, rewrite, and evidence_note
+- ats_keywords: object containing use_now and add_after_gaining_evidence arrays
+- focused_skills: array of objects with category and skills
+- improvement_plan: array of objects with week, action, and resume_evidence_to_create
+- application_recommendation: object containing decision, reason, and next_action
 
 Every score must be an integer from 0 to 100. Include 3-5 resume_changes, up to 3 bullet_rewrites, and exactly 4 improvement_plan items.
 
