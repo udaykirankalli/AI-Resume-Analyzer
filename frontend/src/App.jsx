@@ -1,5 +1,4 @@
 import { Routes, Route } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import HomePage from './pages/HomePage';
 import Analyze from './pages/Analyze';
 import Register from './pages/Register';
@@ -7,7 +6,6 @@ import Login from './pages/Login';
 import UserDetails from './pages/UserDetails';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import PageLoader from './components/PageLoader';
 import HowItWorksPage from './components/HowItWorks';
 import AboutPage from './components/AboutPage';
 import FeaturesPage from './components/FaeturesPage';
@@ -46,19 +44,7 @@ function AppRoutes() {
 }
 
 function App() {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 3000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <>
-      <Toaster position="top-right" reverseOrder={false} />
-      {loading ? <PageLoader /> : <AppRoutes />}
-    </>
-  );
+  return <><Toaster position="top-right" reverseOrder={false} /><AppRoutes /></>;
 }
 
 export default App;
