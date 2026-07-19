@@ -153,7 +153,7 @@ function ResetPassword() {
   // Loading state with more detailed info
   if (isValid === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[#080b1f] px-4 py-24 sm:px-6">
         <div className="bg-white/90 backdrop-blur-lg border border-white/30 shadow-xl rounded-2xl p-8 w-full max-w-md">
           <h2 className="text-2xl font-bold text-center mb-4 text-slate-800">
             Validating Reset Link...
@@ -237,8 +237,8 @@ function ResetPassword() {
 
   // Valid token - show reset form
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 relative">
-      <div className="relative z-10 bg-white/90 backdrop-blur-lg border border-white/30 shadow-xl rounded-2xl p-8 w-full max-w-md">
+    <div className="relative flex min-h-[100dvh] items-center justify-center bg-[#080b1f] px-4 py-24 sm:px-6">
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/30 bg-white/90 p-6 shadow-xl backdrop-blur-lg sm:p-8">
         <h2 className="text-3xl font-semibold text-center text-slate-800 mb-4">
           Reset Password
         </h2>

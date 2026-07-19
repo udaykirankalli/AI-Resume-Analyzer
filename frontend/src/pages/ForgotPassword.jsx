@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-hot-toast";
-import { FlyingResumeAnimation } from "@/components/FlyingResumeAnimation";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -36,8 +35,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 overflow-hidden">
-      <FlyingResumeAnimation />
+    <div className="relative flex min-h-[100dvh] items-center justify-center overflow-x-hidden bg-[#080b1f] px-4 py-24 sm:px-6">
 
       <div className="relative z-10 backdrop-blur-lg bg-white/30 border border-white/30 shadow-xl rounded-2xl p-8 w-full max-w-md space-y-6">
         <h2 className="text-3xl font-semibold text-center text-slate-800">

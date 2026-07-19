@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { FlyingResumeAnimation } from "@/components/FlyingResumeAnimation";
+import ShaderBackground from "@/components/ui/shader-background";
 import TypingText from '@/TypingText'
 import {
   Upload,
@@ -142,14 +142,12 @@ try {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 overflow-hidden">
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <FlyingResumeAnimation />
-      </div>
+    <div className="relative flex min-h-[100dvh] items-center justify-center overflow-x-hidden bg-[#080b1f] px-4 py-24 sm:px-6">
+      <ShaderBackground className="z-0 opacity-80" />
 
       {/* ✅ Profile icon only for logged-in users */}
       {isLoggedIn && (
-        <div className="absolute top-6 right-6 z-20">
+        <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
           <Button
             variant="ghost"
             className="flex items-center space-x-2 text-slate-700 hover:text-blue-700"
@@ -161,16 +159,16 @@ try {
         </div>
       )}
 
-      <div className="relative z-10 max-w-5xl mx-auto space-y-10">
+      <div className="relative z-10 mx-auto w-full max-w-5xl space-y-8 sm:space-y-10">
         {/* 🧠 Header */}
         <div className="text-center pt-12">
-          <div className="flex items-center justify-center mb-4">
+          <div className="mb-4 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-0">
             <div className="p-3 rounded-full bg-white/20 backdrop-blur-xl mr-3">
               <Brain className="w-8 h-8 text-blue-600" />
             </div>
-            <h1 className="text-4xl text-slate-800 font-bold">AI Resume Analyzer</h1>
+            <h1 className="text-center text-3xl font-bold text-slate-800 sm:text-4xl">AI Resume Analyzer</h1>
           </div>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+          <p className="mx-auto max-w-2xl text-base text-slate-600 sm:text-lg">
             Upload your resume (PDF, DOC, DOCX, or Image) and a job description to receive an AI-generated compatibility evaluation.
           </p>
 
@@ -183,7 +181,7 @@ try {
         </div>
 
         {/* 📄 Resume + Job Description Inputs */}
-        <div className="grid md:grid-cols-2 gap-5">
+        <div className="grid gap-5 md:grid-cols-2">
           <Card className="bg-white/30 backdrop-blur-lg border-white/40 shadow-xl">
             <CardHeader>
               <CardTitle className="flex items-center text-slate-800">
@@ -277,7 +275,7 @@ try {
         )}
 
         {evaluation && (
-          <Card className="bg-white/30 border border-white-300 p-4 rounded-lg shadow-xl">
+          <Card className="break-words border border-white-300 bg-white/30 p-4 shadow-xl">
             <CardHeader>
               <CardTitle className="text-xl">Evaluation Result</CardTitle>
             </CardHeader>

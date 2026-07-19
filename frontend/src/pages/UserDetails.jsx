@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { FlyingResumeAnimation } from '../components/FlyingResumeAnimation';
 
 const UserDetails = () => {
   const navigate = useNavigate();
@@ -303,10 +302,9 @@ const UserDetails = () => {
   const emptyStars = 5 - fullStars;
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 overflow-hidden">
-      <FlyingResumeAnimation />
+    <div className="relative flex min-h-[100dvh] items-center justify-center overflow-x-hidden bg-[#080b1f] px-4 py-24 sm:px-6">
 
-      <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl z-10 p-4">
+      <div className="z-10 flex w-full max-w-6xl flex-col gap-6 p-0 md:flex-row sm:p-4">
         {/* Profile Info */}
         <div className="bg-white/30 rounded-xl shadow-md p-6 flex-1 backdrop-blur">
           <h2 className="text-lg font-semibold text-slate-700 mb-4">Profile Information</h2>

@@ -13,7 +13,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
-import { FlyingResumeAnimation } from "@/components/FlyingResumeAnimation";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
@@ -141,8 +140,7 @@ export default function Register() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-blue-200 to-blue-300 overflow-hidden">
-      <FlyingResumeAnimation />
+    <div className="relative flex min-h-[100dvh] items-center justify-center overflow-x-hidden bg-[#080b1f] px-4 py-24 sm:px-6">
       <div className="z-10 w-full max-w-xl">
         <Card className="glassmorphism-card backdrop-blur-2xl bg-white/30 border border-white/20 shadow-xl">
           <CardHeader className="text-center pb-6">
